@@ -15,6 +15,12 @@ import sys
 from pathlib import Path
 from dateutil.parser import parse as parse_date
 
+# Timezone support (zoneinfo in Python 3.9+, fallback to pytz)
+try:
+    from zoneinfo import ZoneInfo
+except ImportError:
+    from backports.zoneinfo import ZoneInfo
+
 # Import M365 auth library
 try:
     from m365auth import get_access_token
@@ -62,7 +68,7 @@ class CalendarBlocker:
             },
             'calendar': {
                 'api_base_url': 'https://graph.microsoft.com/beta',
-                'timezone_offset_hours': 1,  # BST/CET = UTC+1
+                'timezone': 'Europe/London',
                 'work_hours': {
                     'start': 8,
                     'end': 18
@@ -117,11 +123,11 @@ class CalendarBlocker:
             print(f"❌ Failed to get access token: {e}")
             raise
     
-    def get_timezone(self) -> datetime.timezone:
+    def get_timezone(self) -> ZoneInfo:
         """Get timezone from config"""
-        offset_hours = self.config['calendar']['timezone_offset_hours']
-        tz = datetime.timezone(datetime.timedelta(hours=offset_hours))
-        self.vprint(f"🌐 Using timezone: UTC{offset_hours:+d}")
+        tz_name = self.config['calendar'].get('timezone', 'UTC')
+        tz = ZoneInfo(tz_name)
+        self.vprint(f"🌐 Using timezone: {tz_name}")
         return tz
     
     def should_process_date(self, date: datetime.date) -> bool:

@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "calendar-blocker"
+version = "0.1.0"
+description = "Automatically block free time in Microsoft 365 calendar when below threshold"
+readme = "README.md"
+requires-python = ">=3.6"
+license = {text = "MIT"}
+authors = [
+    {name = "Sebastian Funk", email = "sebastian.funk@lshtm.ac.uk"}
+]
+dependencies = [
+    "requests",
+    "pyyaml",
+    "python-dateutil",
+    "m365auth",
+    "tzdata",  # Timezone database (automatically included in Python 3.9+, but explicit for older versions)
+]
+
+[project.scripts]
+calendar-blocker = "calendar_blocker:main"
+
+[project.urls]
+Homepage = "https://github.com/sbfnk/calendar-blocker"
+Repository = "https://github.com/sbfnk/calendar-blocker"
+Issues = "https://github.com/sbfnk/calendar-blocker/issues"
+
+[tool.setuptools]
+py-modules = ["calendar_blocker"]
