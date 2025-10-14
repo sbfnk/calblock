@@ -1,4 +1,4 @@
-# Calendar Blocker
+# calblock
 
 Automatically blocks remaining free time in your Microsoft 365 calendar when it drops below a configurable threshold. Helps ensure you always have dedicated "silent work" time for focused, uninterrupted work.
 
@@ -18,23 +18,23 @@ This tool requires **M365-Auth** for OAuth2 authentication. If you don't have pi
 ```bash
 # Install both packages
 pipx install m365auth
-pipx install calendar-blocker
+pipx install calblock
 
 # Set up authentication
 get-token --profile calendar
 ```
 
-**Note**: Both packages need to be installed separately because pipx creates isolated environments. Installing `calendar-blocker` includes the `m365auth` Python library, but you still need to install `m365auth` separately to get the `get-token` CLI command.
+**Note**: Both packages need to be installed separately because pipx creates isolated environments. Installing `calblock` includes the `m365auth` Python library, but you still need to install `m365auth` separately to get the `get-token` CLI command.
 
 **Before PyPI publication**: Replace the install commands with:
 ```bash
 git clone https://github.com/sbfnk/M365-Auth && pipx install ./M365-Auth
-git clone https://github.com/sbfnk/calendar-blocker && pipx install ./calendar-blocker
+git clone https://github.com/sbfnk/calblock && pipx install ./calblock
 ```
 
 ## Configuration
 
-On first run, calendar_blocker creates a default configuration file at `~/.config/calendar_blocker/config.yaml`:
+On first run, calblock creates a default configuration file at `~/.config/calblock/config.yaml`:
 
 ```yaml
 auth:
@@ -74,19 +74,19 @@ Edit this file to customize:
 
 ```bash
 # Process today (default)
-calendar_blocker
+calblock
 
 # Process next 5 days
-calendar_blocker --days 5
+calblock --days 5
 
 # Process specific date
-calendar_blocker --date 2025-10-15
+calblock --date 2025-10-15
 
 # Verbose mode (shows detailed calculations)
-calendar_blocker -v
+calblock -v
 
 # Custom config file
-calendar_blocker --config ~/my-config.yaml
+calblock --config ~/my-config.yaml
 ```
 
 ## How It Works
@@ -128,12 +128,12 @@ Run automatically via cron:
 ```bash
 # Add to crontab (crontab -e)
 # Run at 7am every weekday, check next 2 days
-0 7 * * 1-5 /Users/yourusername/.local/bin/calendar_blocker --days 2
+0 7 * * 1-5 /Users/yourusername/.local/bin/calblock --days 2
 ```
 
 ## Authentication
 
-Calendar blocker uses the `calendar` profile from M365-Auth. Ensure you've run:
+calblock uses the `calendar` profile from M365-Auth. Ensure you've run:
 
 ```bash
 get-token --profile calendar
