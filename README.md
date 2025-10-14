@@ -24,14 +24,6 @@ pipx install calblock
 get-token --profile calendar
 ```
 
-**Note**: Both packages need to be installed separately because pipx creates isolated environments. Installing `calblock` includes the `m365auth` Python library, but you still need to install `m365auth` separately to get the `get-token` CLI command.
-
-**Before PyPI publication**: Replace the install commands with:
-```bash
-git clone https://github.com/sbfnk/M365-Auth && pipx install ./M365-Auth
-git clone https://github.com/sbfnk/calblock && pipx install ./calblock
-```
-
 ## Configuration
 
 On first run, calblock creates a default configuration file at `~/.config/calblock/config.yaml`:
@@ -42,7 +34,7 @@ auth:
 
 calendar:
   api_base_url: https://graph.microsoft.com/beta
-  timezone: Europe/London  # Automatically handles GMT/BST
+  timezone: Europe/London
   work_hours:
     start: 8
     end: 18
