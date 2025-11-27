@@ -437,9 +437,9 @@ class CalendarBlocker:
         
         self.vprint(f"   Minimum required: {min_free_hours:.1f}h")
         self.vprint(f"   Total available: {total_available:.1f}h")
-        self.vprint(f"   Need blocking: {total_available <= min_free_hours}")
+        self.vprint(f"   Need blocking: {total_available < min_free_hours}")
         
-        if total_available <= min_free_hours:
+        if total_available < min_free_hours:
             min_silent_minutes = min_free_hours * 60
             additional_minutes_needed = max(0, min_silent_minutes - existing_silent_minutes)
             
