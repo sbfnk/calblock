@@ -232,10 +232,11 @@ class CalendarBlocker:
                 else:
                     self.vprint(f"   ⚠️  Unknown showAs '{show_as}' but treating as blocking (accepted meeting)")
                    
-            # Skip non-accepted invitations for explicitly blocking events
-            if show_as in blocking_statuses and response_status.lower() not in ['accepted', 'organizer']:
-                self.vprint(f"   ❌ SKIPPED: Response status '{response_status}' not accepted/organizer")
-                skipped_events.append(f"'{subject}' - response status: {response_status}")
+            # For tentative events, only block if accepted/organizer
+            # For busy/oof events, always treat as blocking regardless of response
+            if show_as == 'tentative' and response_status.lower() not in ['accepted', 'organizer']:
+                self.vprint(f"   ❌ SKIPPED: Tentative event with response status '{response_status}'")
+                skipped_events.append(f"'{subject}' - tentative, response: {response_status}")
                 continue
             
             start = parse_date(event['start']['dateTime'])
