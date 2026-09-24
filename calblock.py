@@ -438,27 +438,26 @@ class CalendarBlocker:
         
         self.vprint(f"   Minimum required: {min_free_hours:.1f}h")
         self.vprint(f"   Total available: {total_available:.1f}h")
-        self.vprint(f"   Need blocking: {total_available < min_free_hours}")
-        
-        if total_available < min_free_hours:
-            min_silent_minutes = min_free_hours * 60
-            additional_minutes_needed = max(0, min_silent_minutes - existing_silent_minutes)
-            
-            self.vprint(f"   Additional minutes needed: {additional_minutes_needed:.1f}")
-            
-            if additional_minutes_needed > 0:
-                created_events = self.create_blocking_events(free_slots, date, additional_minutes_needed)
-                if created_events:
-                    print(f"✅ Blocked {len(created_events)} slots")
-                    return True
-                else:
-                    print(f"❌ Need {additional_minutes_needed}min more but no free slots available")
-                    return False
-            else:
-                print(f"✅ Already sufficient silent work")
-                return False
-        else:
+
+        # Free time is not protected: someone can still book a meeting into it.
+        # While free and silent time together are above the minimum there is room
+        # to block later, so wait; once they are down to it, protect what is left.
+        if total_available > min_free_hours:
             print(f"✅ No blocking needed")
+            return False
+
+        if free_minutes == 0:
+            print(f"✅ Nothing free left to block")
+            return False
+
+        self.vprint(f"   Blocking the remaining {free_minutes:.1f}min of free time")
+
+        created_events = self.create_blocking_events(free_slots, date, free_minutes)
+        if created_events:
+            print(f"✅ Blocked {len(created_events)} slots")
+            return True
+        else:
+            print(f"❌ Need {free_minutes}min more but no free slots available")
             return False
     
     def run_date_range(self, start_date: datetime.date, days: int = 1) -> None:
