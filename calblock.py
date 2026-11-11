@@ -476,11 +476,16 @@ class CalendarBlocker:
         """
         profile = self.config['auth'].get('profile', 'calendar')
         lifetime_days = self.config['auth'].get('signin_lifetime_days')
-        if signed_in_at is None or not lifetime_days:
+        if not lifetime_days:
+            return
+        if signed_in_at is None:
+            print("⚠️  signin_lifetime_days is set, but this m365auth cannot report sign-in times; "
+                  "upgrade it to 0.3 or later for renewal reminders")
             return
         signed_in = signed_in_at(profile)
         if signed_in is None:
-            self.vprint(f"🔑 No sign-in time recorded for profile {profile}")
+            print(f"⚠️  No sign-in time recorded for profile {profile}; "
+                  f"run get-token --profile {profile} to enable renewal reminders")
             return
 
         tz = self.get_timezone()
