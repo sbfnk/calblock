@@ -516,7 +516,9 @@ class CalendarBlocker:
 
         # The reminder fires at the start of the next working day, or straight
         # away if that would be after the sign-in has run out.
-        start = now.replace(hour=self.config['calendar']['work_hours']['start'], minute=0, second=0, microsecond=0)
+        work_start = self.config['calendar']['work_hours']['start']
+        start_hour = int(work_start)
+        start = now.replace(hour=start_hour, minute=int((work_start - start_hour) * 60), second=0, microsecond=0)
         if start <= now:
             start += datetime.timedelta(days=1)
         for _ in range(7):
