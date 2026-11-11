@@ -541,7 +541,9 @@ class CalendarBlocker:
                 'content': (
                     f"The calendar sign-in used by calblock expires on {expires:%A %d %B at %H:%M}.\n\n"
                     f"Sign in again with:\n  get-token --profile {profile}\n"
-                    f"and copy the token to the machine running calblock with push-token if it is a different one."
+                    f"If calblock runs on another machine, copy the token there with:\n"
+                    f"  push-token <host> --profile {profile}\n"
+                    f"adding --file if that machine reads the token from its cache file."
                 )
             }
         }
