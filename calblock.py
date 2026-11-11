@@ -71,7 +71,7 @@ class CalendarBlocker:
         default_config = {
             'auth': {
                 'profile': 'calendar',  # M365 auth profile to use
-                'signin_lifetime_days': 60,  # sign-in frequency set by the organisation
+                'signin_lifetime_days': None,  # sign-in frequency set by the organisation, if any
                 'renewal_warning_days': 7
             },
             'calendar': {
@@ -475,7 +475,8 @@ class CalendarBlocker:
         reminder has to go in while it still can.
         """
         profile = self.config['auth'].get('profile', 'calendar')
-        if signed_in_at is None:
+        lifetime_days = self.config['auth'].get('signin_lifetime_days')
+        if signed_in_at is None or not lifetime_days:
             return
         signed_in = signed_in_at(profile)
         if signed_in is None:
@@ -483,7 +484,7 @@ class CalendarBlocker:
             return
 
         tz = self.get_timezone()
-        expires = (signed_in + datetime.timedelta(days=self.config['auth']['signin_lifetime_days'])).astimezone(tz)
+        expires = (signed_in + datetime.timedelta(days=lifetime_days)).astimezone(tz)
         warn_from = expires - datetime.timedelta(days=self.config['auth']['renewal_warning_days'])
         now = datetime.datetime.now(tz)
         self.vprint(f"🔑 Sign-in expires {expires:%Y-%m-%d %H:%M}")

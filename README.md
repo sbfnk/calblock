@@ -31,7 +31,7 @@ On first run, calblock creates a default configuration file at `~/.config/calblo
 ```yaml
 auth:
   profile: calendar  # M365 auth profile to use
-  signin_lifetime_days: 60  # how long a sign-in lasts under your organisation's policy
+  signin_lifetime_days: 60  # how long a sign-in lasts under your organisation's policy; leave out if unlimited
   renewal_warning_days: 7  # how early to add a reminder to renew it
 
 calendar:
@@ -58,7 +58,7 @@ Edit this file to customize:
 - **work_hours**: Your typical working hours
 - **min_free_hours**: Minimum combined free + silent work time (hours)
 - **process_days**: Which days to process (0=Monday, 6=Sunday)
-- **signin_lifetime_days** and **renewal_warning_days**: When your organisation limits how long a sign-in lasts, calblock adds a reminder event to your calendar this many days before it runs out, at the start of your working day. It needs m365auth 0.3 or later, which records when `get-token` signed in. After signing in again on another machine, copy the token across with `push-token` (see the m365auth README)
+- **signin_lifetime_days** and **renewal_warning_days**: When your organisation limits how long a sign-in lasts, set `signin_lifetime_days` to that limit (off by default), and calblock adds a reminder event to your calendar this many days before it runs out, at the start of your working day. It needs m365auth 0.3 or later, which records when `get-token` signed in. After signing in again on another machine, copy the token across with `push-token` (see the m365auth README)
 - **timezone**: Your timezone name
   - Examples: `Europe/London` (GMT/BST), `America/New_York` (EST/EDT), `Asia/Tokyo`, `UTC`
   - Full list: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
