@@ -29,6 +29,12 @@ except ImportError:
     print("You can install it with: pip install -e /path/to/M365-Auth")
     sys.exit(1)
 
+try:
+    from m365auth import signed_in_at
+except ImportError:
+    # m365auth before 0.3 does not record sign-in times
+    signed_in_at = None
+
 # XDG Base Directory support
 def get_xdg_config_home() -> Path:
     """Get XDG config directory"""
@@ -64,7 +70,9 @@ class CalendarBlocker:
         # Default configuration
         default_config = {
             'auth': {
-                'profile': 'calendar'  # M365 auth profile to use
+                'profile': 'calendar',  # M365 auth profile to use
+                'signin_lifetime_days': 60,  # sign-in frequency set by the organisation
+                'renewal_warning_days': 7
             },
             'calendar': {
                 'api_base_url': 'https://graph.microsoft.com/beta',
@@ -460,6 +468,75 @@ class CalendarBlocker:
             print(f"❌ Need {free_minutes}min more but no free slots available")
             return False
     
+    def remind_renewal(self) -> None:
+        """Add a calendar reminder when the sign-in behind the token is about to expire.
+
+        Once it has expired, calblock can no longer reach the calendar, so the
+        reminder has to go in while it still can.
+        """
+        profile = self.config['auth'].get('profile', 'calendar')
+        if signed_in_at is None:
+            return
+        signed_in = signed_in_at(profile)
+        if signed_in is None:
+            self.vprint(f"🔑 No sign-in time recorded for profile {profile}")
+            return
+
+        tz = self.get_timezone()
+        expires = (signed_in + datetime.timedelta(days=self.config['auth']['signin_lifetime_days'])).astimezone(tz)
+        warn_from = expires - datetime.timedelta(days=self.config['auth']['renewal_warning_days'])
+        now = datetime.datetime.now(tz)
+        self.vprint(f"🔑 Sign-in expires {expires:%Y-%m-%d %H:%M}")
+        if now < warn_from or now >= expires:
+            return
+
+        subject = f"Renew calendar sign-in for calblock (expires {expires:%a %d %b %H:%M})"
+        if not self.access_token:
+            self.get_access_token()
+        headers = {
+            'Authorization': f'Bearer {self.access_token}',
+            'Content-Type': 'application/json'
+        }
+        base_url = self.config['calendar']['api_base_url']
+        response = requests.get(f"{base_url}/me/calendar/calendarView", headers=headers, timeout=30, params={
+            'startDateTime': warn_from.isoformat(),
+            'endDateTime': expires.isoformat(),
+            '$select': 'subject',
+            '$top': 500
+        })
+        response.raise_for_status()
+        if any(event.get('subject') == subject for event in response.json().get('value', [])):
+            return
+
+        # The reminder fires at the start of the next working day, or straight
+        # away if that would be after the sign-in has run out.
+        start = now.replace(hour=self.config['calendar']['work_hours']['start'], minute=0, second=0, microsecond=0)
+        if start <= now:
+            start += datetime.timedelta(days=1)
+        if start >= expires:
+            start = now
+        end = start + datetime.timedelta(minutes=15)
+        tz_name = self.config['calendar']['timezone']
+        event_data = {
+            'subject': subject,
+            'start': {'dateTime': start.strftime('%Y-%m-%dT%H:%M:%S'), 'timeZone': tz_name},
+            'end': {'dateTime': end.strftime('%Y-%m-%dT%H:%M:%S'), 'timeZone': tz_name},
+            'showAs': 'free',
+            'isReminderOn': True,
+            'reminderMinutesBeforeStart': 0,
+            'body': {
+                'contentType': 'text',
+                'content': (
+                    f"The calendar sign-in used by calblock expires on {expires:%A %d %B at %H:%M}.\n\n"
+                    f"Sign in again with:\n  get-token --profile {profile}\n"
+                    f"and copy the token to the machine running calblock with push-token if it is a different one."
+                )
+            }
+        }
+        response = requests.post(f"{base_url}/me/calendar/events", json=event_data, headers=headers, timeout=30)
+        response.raise_for_status()
+        print(f"🔑 Added renewal reminder for {start:%Y-%m-%d %H:%M}: sign-in expires {expires:%Y-%m-%d %H:%M}")
+
     def run_date_range(self, start_date: datetime.date, days: int = 1) -> None:
         """Run the blocker for a date range"""
         blocked_days = 0
@@ -510,6 +587,11 @@ def main():
         blocker.run_date_range(start_date, days_to_process)
     except Exception as e:
         print(f"❌ Error: {e}")
+        return
+    try:
+        blocker.remind_renewal()
+    except Exception as e:
+        print(f"❌ Could not add renewal reminder: {e}")
 
 if __name__ == "__main__":
     main()
