@@ -514,6 +514,10 @@ class CalendarBlocker:
         start = now.replace(hour=self.config['calendar']['work_hours']['start'], minute=0, second=0, microsecond=0)
         if start <= now:
             start += datetime.timedelta(days=1)
+        for _ in range(7):
+            if start.weekday() in self.config['calendar']['process_days']:
+                break
+            start += datetime.timedelta(days=1)
         if start >= expires:
             start = now
         end = start + datetime.timedelta(minutes=15)
